@@ -3,7 +3,7 @@ from GenDriver import GenDriver, GenTask, GenResult
 
 def test(x):
     yield x
-    if x == 1000:
+    if x == 10000:
         return
 
     it = test(1 + x)
@@ -11,8 +11,6 @@ def test(x):
     while v != StopIteration:
         yield v
         v = yield GenTask(generator=it)
-
-    yield x
 
 
 for v in GenDriver(test(0)).iter():
