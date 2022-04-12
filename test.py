@@ -7,12 +7,10 @@ def test(x):
         return
 
     it = test(1 + x)
-    while True:
-        v = yield GenTask(generator=it)
-        if v == StopIteration:
-            break
-
+    v = yield GenTask(generator=it)
+    while v != StopIteration:
         yield v
+        v = yield GenTask(generator=it)
 
     yield x
 
