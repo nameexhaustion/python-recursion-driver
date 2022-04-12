@@ -1,5 +1,6 @@
 from typing import *
 from dataclasses import dataclass
+from collections import deque
 
 
 @dataclass
@@ -14,7 +15,8 @@ class GenResult:
 
 class GenDriver:
     def __init__(self, generator: Generator):
-        self.stack: List[Generator] = [generator]
+        self.stack: Deque[Generator] = deque()
+        self.stack.append(generator)
         self.consumed: bool = False
 
     def iter(self):
@@ -23,7 +25,7 @@ class GenDriver:
 
         self.consumed = True
 
-        currentGenerator: Generator = self.stack[-1]
+        currentGenerator: Generator = self.stack.pop()
 
         try:
             yieldedValue = next(currentGenerator)
@@ -34,39 +36,36 @@ class GenDriver:
             try:
                 while True:
                     if type(yieldedValue) == GenResult:
-                        if len(self.stack) > 1:
-                            yieldedValue = self.stack[-2].send(yieldedValue)
-                            self.stack.pop()
-                            currentGenerator = self.stack[-1]
-                            continue
-
-                        else:
+                        if not self.stack:
                             yield yieldedValue.result
 
-                    elif type(yieldedValue) == GenTask:
-                        currentGenerator = yieldedValue.generator
-                        self.stack.append(currentGenerator)
-
-                    else:
-                        if len(self.stack) > 1:
-                            yieldedValue = self.stack[-2].send(yieldedValue)
-                            self.stack.pop()
-                            currentGenerator = self.stack[-1]
+                        else:
+                            currentGenerator = self.stack.pop()
+                            yieldedValue = currentGenerator.send(yieldedValue)
                             continue
 
-                        else:
+                    elif type(yieldedValue) == GenTask:
+                        self.stack.append(currentGenerator)
+                        currentGenerator = yieldedValue.generator
+
+                    else:
+                        if not self.stack:
                             yield yieldedValue
+
+                        else:
+                            currentGenerator = self.stack.pop()
+                            yieldedValue = currentGenerator.send(yieldedValue)
+                            continue
 
                     yieldedValue = next(currentGenerator)
 
             except StopIteration:
                 while True:
                     try:
-                        if len(self.stack) == 1:
+                        if not self.stack:
                             return
 
-                        self.stack.pop()
-                        currentGenerator = self.stack[-1]
+                        currentGenerator = self.stack.pop()
                         yieldedValue = currentGenerator.send(StopIteration)
                         break
 

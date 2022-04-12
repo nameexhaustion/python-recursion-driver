@@ -12,6 +12,8 @@ def test(x):
         yield v
         v = yield GenTask(generator=it)
 
+    yield x
+
 
 for v in GenDriver(test(0)).iter():
     print(v)
