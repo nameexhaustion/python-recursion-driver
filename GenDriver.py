@@ -41,7 +41,7 @@ class GenDriver:
                             continue
 
                         else:
-                            yield yieldedValue
+                            yield yieldedValue.result
 
                     elif type(yieldedValue) == GenTask:
                         currentGenerator = yieldedValue.generator

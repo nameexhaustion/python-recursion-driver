@@ -1,4 +1,4 @@
-from GenDriver import GenDriver, GenTask
+from GenDriver import GenDriver, GenTask, GenResult
 
 
 def test(x):
